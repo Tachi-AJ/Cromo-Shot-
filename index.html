@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cromo Shot! (Phaser Edition)</title>
+    <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+
+<div id="game-container">
+    <canvas id="gameCanvas" width="1280" height="720"></canvas>
+    
+    <div id="hud" style="display: none;">
+        <!-- P1 -->
+        <div id="hud-p1" class="hud-corner">
+            <div class="player-name-plate">
+                <span id="name-p1" style="color: #00f3ff;">JUGADOR 1</span>
+                <div id="score-p1" class="score-display"></div>
+            </div>
+            <div class="health-bar-container"><div id="hp-p1" class="health-fill"></div><div id="hp-text-p1" class="hp-text">500</div></div>
+            <div class="hud-row"><div id="passive-p1" class="passive-container"></div><div id="spells-p1" class="spell-container"></div></div>
+        </div>
+        <!-- P2 -->
+        <div id="hud-p2" class="hud-corner">
+            <div class="player-name-plate" style="flex-direction: row-reverse;">
+                <span id="name-p2" style="color: #ff003c;">JUGADOR 2</span>
+                <div id="score-p2" class="score-display"></div>
+            </div>
+            <div class="health-bar-container"><div id="hp-p2" class="health-fill" style="float: right;"></div><div id="hp-text-p2" class="hp-text">500</div></div>
+            <div class="hud-row" style="flex-direction: row-reverse;"><div id="passive-p2" class="passive-container"></div><div id="spells-p2" class="spell-container" style="justify-content: flex-end;"></div></div>
+        </div>
+        <!-- P3 -->
+        <div id="hud-p3" class="hud-corner">
+            <div class="hud-row"><div id="passive-p3" class="passive-container"></div><div id="spells-p3" class="spell-container"></div></div>
+            <div class="health-bar-container"><div id="hp-p3" class="health-fill"></div><div id="hp-text-p3" class="hp-text">500</div></div>
+            <div class="player-name-plate">
+                <span id="name-p3" style="color: #00ff00;">JUGADOR 3</span>
+                <div id="score-p3" class="score-display"></div>
+            </div>
+        </div>
+        <!-- P4 -->
+        <div id="hud-p4" class="hud-corner">
+            <div class="hud-row" style="flex-direction: row-reverse;"><div id="passive-p4" class="passive-container"></div><div id="spells-p4" class="spell-container" style="justify-content: flex-end;"></div></div>
+            <div class="health-bar-container"><div id="hp-p4" class="health-fill" style="float: right;"></div><div id="hp-text-p4" class="hp-text">500</div></div>
+            <div class="player-name-plate" style="flex-direction: row-reverse;">
+                <span id="name-p4" style="color: #ffff00;">JUGADOR 4</span>
+                <div id="score-p4" class="score-display"></div>
+            </div>
+        </div>
+        <!-- P5 -->
+        <div id="hud-p5" class="hud-corner">
+            <div class="player-name-plate">
+                <span id="name-p5" style="color: #aa00ff;">JUGADOR 5</span>
+                <div id="score-p5" class="score-display"></div>
+            </div>
+            <div class="health-bar-container"><div id="hp-p5" class="health-fill"></div><div id="hp-text-p5" class="hp-text">500</div></div>
+            <div class="hud-row"><div id="passive-p5" class="passive-container"></div><div id="spells-p5" class="spell-container"></div></div>
+        </div>
+        <!-- P6 -->
+        <div id="hud-p6" class="hud-corner">
+            <div class="player-name-plate" style="flex-direction: row-reverse;">
+                <span id="name-p6" style="color: #ffaa00;">JUGADOR 6</span>
+                <div id="score-p6" class="score-display"></div>
+            </div>
+            <div class="health-bar-container"><div id="hp-p6" class="health-fill" style="float: right;"></div><div id="hp-text-p6" class="hp-text">500</div></div>
+            <div class="hud-row" style="flex-direction: row-reverse;"><div id="passive-p6" class="passive-container"></div><div id="spells-p6" class="spell-container" style="justify-content: flex-end;"></div></div>
+        </div>
+
+        <div class="hud-center">
+            <div style="display: flex; gap: 8px;">
+                <button class="qol-btn" id="mute-btn" title="Silenciar">SONIDO</button>
+                <button class="qol-btn" id="pause-btn" title="Pausar">PAUSA</button>
+            </div>
+            <div id="wave-text">Ronda 1</div>
+        </div>
+    </div>
+    
+    <div id="boss-hud"><div id="boss-name">JEFE DE LA HORDA</div><div id="boss-hp-bar"><div id="boss-hp-fill"></div></div></div>
+    <div id="powerup-msg" class="powerup-text">POWER UP</div>
+
+    <div id="upgrade-overlay">
+        <div id="upgrade-container">
+            <h2 id="upgrade-player-title">JUGADOR 1 ELIGE UNA MEJORA</h2>
+            <div id="upgrade-cards-wrapper">
+                <!-- Generado dinámicamente -->
+            </div>
+            <div id="upgrade-controls-hint">Mover: Izq/Der (A/D, Flechas o Mando) | Confirmar: Salto o Disparo (W/F, Arriba/Num0 o A/Mando)</div>
+        </div>
+    </div>
+
+    <div id="round-overlay">
+        <h2 id="round-winner-text">JUGADOR 1 GANA LA RONDA</h2>
+        <p id="round-score-text">Marcador: 1 / 3</p>
+    </div>
+
+    <div id="map-preview-overlay">
+        <h2 id="map-preview-title">Preview del mapa</h2>
+        <p id="map-preview-text">Zonas rojas: caida al vacio. Puntos brillantes: spawns seguros.</p>
+    </div>
+
+    <div id="touch-controls">
+        <div class="touch-pad left">
+            <div id="touch-joystick" class="touch-joystick">
+                <div id="touch-stick" class="touch-stick"></div>
+            </div>
+        </div>
+        <div class="touch-pad right">
+            <div class="touch-btn primary jump" data-touch="jump">SALTO</div>
+            <div class="touch-btn primary" data-touch="shoot">DISP</div>
+            <div class="touch-btn primary" data-touch="action">PODER</div>
+            <div class="touch-btn" data-touch="cyclePrev">HAB-</div>
+            <div class="touch-btn" data-touch="cycleNext">HAB+</div>
+            <div class="touch-btn" data-touch="ragdoll">TRAPO</div>
+        </div>
+    </div>
+
+    <div id="ui-layer">
+        <div id="start-screen" class="screen">
+            <button id="settings-toggle-btn" class="settings-gear-btn" title="Configuración">⚙️</button>
+            <h1 id="title-text">Cromo Shot!</h1>
+            <p class="subtitle">Ultimate Edition &bull; hasta 6 jugadores &bull; PvE, debug y controles tactiles</p>
+            
+            <div class="options-wrapper">
+                <div class="option-group">
+                    <label>Modo de Juego:</label>
+                    <select id="mode-select">
+                        <option value="pvp">Combate a Muerte (PvP)</option>
+                        <option value="pve" selected>Co-op vs Horda & Jefes (PvE)</option>
+                        <option value="roguelike">Cromo Roguelike (PvE + Tienda)</option>
+                    </select>
+                </div>
+                <div class="option-group" id="wins-group" style="display: none;">
+                    <label>Limite de Victorias:</label>
+                    <select id="wins-select">
+                        <option value="1">1 Victoria (Rapido)</option>
+                        <option value="3" selected>Mejor de 3</option>
+                        <option value="5">Mejor de 5</option>
+                        <option value="10">Mejor de 10 (Epico)</option>
+                        <option value="999">Infinito</option>
+                    </select>
+                </div>
+                <div class="option-group">
+                    <label>Mapa de Batalla:</label>
+                    <select id="map-select">
+                        <option value="random" style="color:#00f3ff; font-weight:bold;">ALEATORIO POR RONDA</option>
+                        <option value="classic" selected>Clasico</option>
+                        <option value="grand_arena">Gran Arena (Gigante)</option>
+                        <option value="floating_islands">Islas Flotantes</option>
+                        <option value="towers">Torres Gemelas</option>
+                        <option value="pit">El Foso Mortal</option>
+                        <option value="hell">Infierno</option>
+                        <option value="volcano">El Volcan</option>
+                        <option value="dojo">Dojo de Bambu</option>
+                        <option value="factory">Fabrica de Pintura</option>
+                        <option value="garden">Jardin Gigante</option>
+                        <option value="pirate_bay">Bahia Pirata</option>
+                        <option value="choke_point">Choke Point</option>
+                        <option value="sky_temple">Templo Celeste</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="players-grid">
+                <!-- Jugador 1 -->
+                <div class="player-card" id="card-p1" style="border-top-color: #00f3ff;">
+                    <div class="player-header">
+                        <span style="color: #00f3ff;">JUGADOR 1</span>
+                        <label><input type="checkbox" id="active-p1" checked disabled> Activo</label>
+                    </div>
+                    <input type="color" id="color-p1" value="#00f3ff">
+                    <select id="input-p1">
+                        <option value="KB1" selected>Teclado 1</option>
+                        <option value="KB2">Teclado 2</option>
+                        <option value="GP0">Mando 1</option>
+                        <option value="GP1">Mando 2</option>
+                        <option value="GP2">Mando 3</option>
+                        <option value="GP3">Mando 4</option>
+                        <option value="GP4">Mando 5</option>
+                        <option value="GP5">Mando 6</option>
+                        <option value="GP6">Mando 7</option>
+                        <option value="GP7">Mando 8</option>
+                        <option value="TOUCH">Pantalla táctil</option>
+                    </select>
+                    <div id="hint-p1" class="player-controls-hint">WASD (Mover)<br>F (Disparo) G (Poder) Q (Cambiar)</div>
+                </div>
+                <!-- Jugador 2 -->
+                <div class="player-card inactive" id="card-p2" style="border-top-color: #ff003c;">
+                    <div class="player-header">
+                        <span style="color: #ff003c;">JUGADOR 2</span>
+                        <label><input type="checkbox" id="active-p2"> Activo</label>
+                    </div>
+                    <input type="color" id="color-p2" value="#ff003c">
+                    <select id="input-p2">
+                        <option value="KB1">Teclado 1</option>
+                        <option value="KB2" selected>Teclado 2</option>
+                        <option value="GP0">Mando 1</option>
+                        <option value="GP1">Mando 2</option>
+                        <option value="GP2">Mando 3</option>
+                        <option value="GP3">Mando 4</option>
+                        <option value="GP4">Mando 5</option>
+                        <option value="GP5">Mando 6</option>
+                        <option value="GP6">Mando 7</option>
+                        <option value="GP7">Mando 8</option>
+                        <option value="TOUCH">Pantalla táctil</option>
+                    </select>
+                    <div id="hint-p2" class="player-controls-hint">Flechas (Mover)<br>Num0 (Disparo) Num1 (Poder)</div>
+                </div>
+                <!-- Jugador 3 -->
+                <div class="player-card inactive" id="card-p3" style="border-top-color: #00ff00;">
+                    <div class="player-header">
+                        <span style="color: #00ff00;">JUGADOR 3</span>
+                        <label><input type="checkbox" id="active-p3"> Activo</label>
+                    </div>
+                    <input type="color" id="color-p3" value="#00ff00">
+                    <select id="input-p3">
+                        <option value="KB1">Teclado 1</option>
+                        <option value="KB2">Teclado 2</option>
+                        <option value="GP0" selected>Mando 1</option>
+                        <option value="GP1">Mando 2</option>
+                        <option value="GP2">Mando 3</option>
+                        <option value="GP3">Mando 4</option>
+                        <option value="GP4">Mando 5</option>
+                        <option value="GP5">Mando 6</option>
+                        <option value="GP6">Mando 7</option>
+                        <option value="GP7">Mando 8</option>
+                        <option value="TOUCH">Pantalla táctil</option>
+                    </select>
+                    <div id="hint-p3" class="player-controls-hint">-</div>
+                </div>
+                <!-- Jugador 4 -->
+                <div class="player-card inactive" id="card-p4" style="border-top-color: #ffff00;">
+                    <div class="player-header">
+                        <span style="color: #ffff00;">JUGADOR 4</span>
+                        <label><input type="checkbox" id="active-p4"> Activo</label>
+                    </div>
+                    <input type="color" id="color-p4" value="#ffff00">
+                    <select id="input-p4">
+                        <option value="KB1">Teclado 1</option>
+                        <option value="KB2">Teclado 2</option>
+                        <option value="GP0">Mando 1</option>
+                        <option value="GP1" selected>Mando 2</option>
+                        <option value="GP2">Mando 3</option>
+                        <option value="GP3">Mando 4</option>
+                        <option value="GP4">Mando 5</option>
+                        <option value="GP5">Mando 6</option>
+                        <option value="GP6">Mando 7</option>
+                        <option value="GP7">Mando 8</option>
+                        <option value="TOUCH">Pantalla táctil</option>
+                    </select>
+                    <div id="hint-p4" class="player-controls-hint">-</div>
+                </div>
+                <!-- Jugador 5 -->
+                <div class="player-card inactive" id="card-p5" style="border-top-color: #aa00ff;">
+                    <div class="player-header">
+                        <span style="color: #aa00ff;">JUGADOR 5</span>
+                        <label><input type="checkbox" id="active-p5"> Activo</label>
+                    </div>
+                    <input type="color" id="color-p5" value="#aa00ff">
+                    <select id="input-p5">
+                        <option value="KB1">Teclado 1</option>
+                        <option value="KB2">Teclado 2</option>
+                        <option value="GP0">Mando 1</option>
+                        <option value="GP1">Mando 2</option>
+                        <option value="GP2" selected>Mando 3</option>
+                        <option value="GP3">Mando 4</option>
+                        <option value="GP4">Mando 5</option>
+                        <option value="GP5">Mando 6</option>
+                        <option value="GP6">Mando 7</option>
+                        <option value="GP7">Mando 8</option>
+                        <option value="TOUCH">Pantalla táctil</option>
+                    </select>
+                    <div id="hint-p5" class="player-controls-hint">-</div>
+                </div>
+                <!-- Jugador 6 -->
+                <div class="player-card inactive" id="card-p6" style="border-top-color: #ffaa00;">
+                    <div class="player-header">
+                        <span style="color: #ffaa00;">JUGADOR 6</span>
+                        <label><input type="checkbox" id="active-p6"> Activo</label>
+                    </div>
+                    <input type="color" id="color-p6" value="#ffaa00">
+                    <select id="input-p6">
+                        <option value="KB1">Teclado 1</option>
+                        <option value="KB2">Teclado 2</option>
+                        <option value="GP0">Mando 1</option>
+                        <option value="GP1">Mando 2</option>
+                        <option value="GP2">Mando 3</option>
+                        <option value="GP3" selected>Mando 4</option>
+                        <option value="GP4">Mando 5</option>
+                        <option value="GP5">Mando 6</option>
+                        <option value="GP6">Mando 7</option>
+                        <option value="GP7">Mando 8</option>
+                        <option value="TOUCH">Pantalla táctil</option>
+                    </select>
+                    <div id="hint-p6" class="player-controls-hint">-</div>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 20px; width: 100%; max-width: 600px; justify-content: center; margin-top: 15px;">
+                <button id="start-btn" style="flex: 2; margin: 0;">ENTRAR A LA ARENA</button>
+                <button id="how-to-play-btn" class="btn-secondary" style="flex: 1; margin: 0; font-size: 1.1rem; padding: 12px 25px; white-space: nowrap;">CÓMO JUGAR</button>
+            </div>
+        </div>
+
+        <div id="pause-screen" class="screen" style="display: none;">
+            <h1>Juego Pausado</h1>
+            <button id="resume-btn">CONTINUAR</button>
+            <button class="btn-secondary" id="quit-btn">ABANDONAR PARTIDA</button>
+        </div>
+
+        <div id="game-over-screen" class="screen" style="display: none;">
+            <h1 id="winner-text">VICTORIA ABSOLUTA</h1>
+            <p id="stats-text"></p>
+            <button id="rematch-btn">JUGAR REVANCHA</button>
+            <button class="btn-secondary" id="menu-btn">VOLVER AL MENU</button>
+        </div>
+
+        <!-- Modal Overlay -->
+        <div id="modal-overlay" class="modal-overlay"></div>
+        
+        <!-- Modal de Configuración Técnica -->
+        <div id="settings-modal">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
+                <h2 style="margin: 0; font-family: 'Montserrat', sans-serif; background: linear-gradient(45deg, #00f3ff, #da00ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; letter-spacing: 1px; font-size: 1.8rem;">Configuración Técnica</h2>
+                <button id="settings-close-btn" class="close-btn" style="background: transparent; border: none; font-size: 1.8rem; color: #ff003c; cursor: pointer; padding: 0; margin: 0; box-shadow: none; transition: transform 0.2s; min-height: auto; width: auto; line-height: 1;">&times;</button>
+            </div>
+            <div class="settings-modal-body" style="display: flex; flex-direction: column; gap: 20px; text-align: left;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="option-group">
+                        <label>Resolución Gráfica:</label>
+                        <select id="res-select">
+                            <option value="1000x650">1000x650 (Ventana Original)</option>
+                            <option value="1280x720" selected>1280x720 (HD - Recomendado)</option>
+                            <option value="1600x900">1600x900 (Ultra Ancho)</option>
+                            <option value="1920x1080">1920x1080 (Full HD)</option>
+                        </select>
+                    </div>
+                    <div class="option-group">
+                        <label>Rendimiento:</label>
+                        <select id="perf-select">
+                            <option value="normal" selected>Normal (PC gamer)</option>
+                            <option value="laptop">Laptop equilibrado</option>
+                            <option value="mobile">Celular táctil</option>
+                            <option value="potato">Modo papa estable</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; display: flex; flex-direction: column; gap: 15px;">
+                    <label class="settings-toggle" style="justify-content: flex-start; background: rgba(0,0,0,0.2); margin: 0; box-sizing: border-box; width: 100%;"><input type="checkbox" id="debug-mode"> <span>Debug: spellbook completo</span></label>
+                    <label class="settings-toggle" style="justify-content: flex-start; background: rgba(0,0,0,0.2); margin: 0; box-sizing: border-box; width: 100%;"><input type="checkbox" id="touch-mode"> <span>Controles táctiles en pantalla</span></label>
+                    <label class="settings-toggle" style="justify-content: flex-start; background: rgba(0,0,0,0.2); margin: 0; box-sizing: border-box; width: 100%;"><input type="checkbox" id="qol-autoaim" checked> <span>Ayuda de apuntado PvE</span></label>
+                    <label class="settings-toggle" style="justify-content: flex-start; background: rgba(0,0,0,0.2); margin: 0; box-sizing: border-box; width: 100%;"><input type="checkbox" id="anime-mode"> <span>Activar compañeras waifu voladoras</span></label>
+                </div>
+                
+                <button id="settings-save-btn" style="width: 100%; margin-top: 15px; padding: 12px; font-size: 1.1rem;" class="btn-secondary">Guardar y Cerrar</button>
+            </div>
+        </div>
+
+        <!-- Modal de Cómo Jugar -->
+        <div id="how-to-play-modal" class="custom-modal">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
+                <h2 style="margin: 0; font-family: 'Montserrat', sans-serif; background: linear-gradient(45deg, #00f3ff, #da00ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; letter-spacing: 1px; font-size: 1.8rem;">Guía de Juego - Cromo Shot!</h2>
+                <button id="how-to-play-close-btn" class="close-btn" style="background: transparent; border: none; font-size: 1.8rem; color: #ff003c; cursor: pointer; padding: 0; margin: 0; box-shadow: none; transition: transform 0.2s; min-height: auto; width: auto; line-height: 1;">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: left; max-height: 50vh; overflow-y: auto; padding-right: 10px; font-size: 0.95rem;">
+                <!-- Tabs navigation -->
+                <div class="tab-nav" style="display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; flex-wrap: wrap;">
+                    <button class="tab-btn active" data-tab="tab-controls" style="font-size: 0.8rem; padding: 6px 12px; margin: 0;">Controles</button>
+                    <button class="tab-btn" data-tab="tab-spells" style="font-size: 0.8rem; padding: 6px 12px; margin: 0;">Poderes & Fusiones</button>
+                    <button class="tab-btn" data-tab="tab-ragdoll" style="font-size: 0.8rem; padding: 6px 12px; margin: 0;">Físicas & Patadas</button>
+                    <button class="tab-btn" data-tab="tab-roguelike" style="font-size: 0.8rem; padding: 6px 12px; margin: 0;">Roguelike</button>
+                </div>
+                
+                <!-- Tab content: Controls -->
+                <div id="tab-controls" class="tab-content-pane">
+                    <h3 style="color: #00f3ff; margin: 10px 0 5px; font-size: 1.1rem;">Teclado 1 (Jugador 1)</h3>
+                    <ul style="padding-left: 20px; line-height: 1.4; margin: 5px 0;">
+                        <li><strong>Mover:</strong> <kbd>A</kbd> / <kbd>D</kbd></li>
+                        <li><strong>Saltar:</strong> <kbd>W</kbd> (Doble salto permitido)</li>
+                        <li><strong>Disparar Paint:</strong> <kbd>F</kbd></li>
+                        <li><strong>Poder Especial:</strong> <kbd>G</kbd></li>
+                        <li><strong>Cambiar Habilidad:</strong> <kbd>Q</kbd> (Hab-) y <kbd>E</kbd> (Hab+)</li>
+                        <li><strong>Modo Muñeco de Trapo:</strong> <kbd>C</kbd></li>
+                    </ul>
+                    <h3 style="color: #ff003c; margin: 10px 0 5px; font-size: 1.1rem;">Teclado 2 (Jugador 2)</h3>
+                    <ul style="padding-left: 20px; line-height: 1.4; margin: 5px 0;">
+                        <li><strong>Mover:</strong> <kbd>&larr;</kbd> / <kbd>&rarr;</kbd></li>
+                        <li><strong>Saltar:</strong> <kbd>&uarr;</kbd></li>
+                        <li><strong>Disparar Paint:</strong> <kbd>Numpad 0</kbd></li>
+                        <li><strong>Poder Especial:</strong> <kbd>Numpad 1</kbd></li>
+                        <li><strong>Cambiar Habilidad:</strong> <kbd>Numpad 2</kbd> / <kbd>3</kbd></li>
+                        <li><strong>Modo Muñeco de Trapo:</strong> <kbd>V</kbd></li>
+                    </ul>
+                    <h3 style="color: #00ff00; margin: 10px 0 5px; font-size: 1.1rem;">Mandos de Control</h3>
+                    <ul style="padding-left: 20px; line-height: 1.4; margin: 5px 0;">
+                        <li><strong>Mover:</strong> Joystick Izquierdo o D-pad</li>
+                        <li><strong>Saltar:</strong> Botón <kbd>A</kbd> (Xbox) / <kbd>&cross;</kbd> (PS)</li>
+                        <li><strong>Disparar Paint:</strong> Botón <kbd>X</kbd> / <kbd>&square;</kbd> o Gatillo <kbd>RT</kbd></li>
+                        <li><strong>Poder Especial:</strong> Botón <kbd>B</kbd> / <kbd>&bigcirc;</kbd></li>
+                        <li><strong>Cambiar Habilidad:</strong> Botones superiores <kbd>LB</kbd> / <kbd>RB</kbd></li>
+                        <li><strong>Modo Muñeco de Trapo:</strong> Gatillo <kbd>LT</kbd> o click Joystick <kbd>L3</kbd></li>
+                    </ul>
+                </div>
+
+                <!-- Tab content: Spells & Fusions -->
+                <div id="tab-spells" class="tab-content-pane" style="display: none;">
+                    <style>
+                        .fusions-grid {
+                            display: grid;
+                            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                            gap: 12px;
+                            margin-top: 15px;
+                        }
+                        .fusion-card {
+                            background: rgba(255, 255, 255, 0.02);
+                            border: 1px solid rgba(255, 255, 255, 0.05);
+                            border-radius: 10px;
+                            padding: 14px;
+                            transition: all 0.25s ease;
+                        }
+                        .fusion-card:hover {
+                            background: rgba(255, 255, 255, 0.04);
+                            border-color: rgba(0, 243, 255, 0.25);
+                            transform: translateY(-2px);
+                        }
+                        .fusion-recipe {
+                            display: flex;
+                            align-items: center;
+                            gap: 6px;
+                            font-size: 0.78rem;
+                            margin-bottom: 6px;
+                            flex-wrap: wrap;
+                        }
+                        .spell-tag {
+                            background: rgba(255, 255, 255, 0.08);
+                            padding: 2px 7px;
+                            border-radius: 4px;
+                            font-weight: bold;
+                            color: #aaddff;
+                            border: 1px solid rgba(255, 255, 255, 0.05);
+                        }
+                        .fusion-result {
+                            font-size: 1.05rem;
+                            font-weight: bold;
+                            color: #da00ff;
+                            text-shadow: 0 0 10px rgba(218, 0, 255, 0.4);
+                            margin: 6px 0;
+                        }
+                        .fusion-desc {
+                            font-size: 0.8rem;
+                            color: #b0c0d0;
+                            line-height: 1.4;
+                        }
+                    </style>
+                    <p style="margin: 5px 0;">¡Disparar a las plataformas las pinta con tu color! Esto te otorga velocidad e impulsos extra.</p>
+                    <h3 style="color: #da00ff; margin: 15px 0 5px; font-size: 1.1rem;">Fusión y Subida de Nivel</h3>
+                    <p style="margin: 5px 0;">Recoger una carta de habilidad que ya posees la **fusiona**, mejorándola hasta Nivel 3 (Paintball, Shotgun, Machinegun, etc.).</p>
+                    <p style="margin: 5px 0;">Además, puedes combinar <strong>dos cartas distintas de Nivel 1</strong> para crear un <strong>Poder Fusionado Supremo</strong>:</p>
+                    
+                    <div class="fusions-grid">
+                        <div class="fusion-card">
+                            <div class="fusion-recipe">
+                                <span class="spell-tag">HADOUKEN</span> + <span class="spell-tag">RASENGAN</span>
+                            </div>
+                            <div class="fusion-result" style="color: #ff6a00; text-shadow: 0 0 10px rgba(255,106,0,0.4);">GOUKAKYU (BOLA DE FUEGO)</div>
+                            <div class="fusion-desc">Lanza una bola de fuego gigante y destructiva que rebota y explota al chocar contra plataformas o enemigos.</div>
+                        </div>
+                        <div class="fusion-card">
+                            <div class="fusion-recipe">
+                                <span class="spell-tag">KAMEHA</span> + <span class="spell-tag">GETSUGA</span>
+                            </div>
+                            <div class="fusion-result" style="color: #9a00ff; text-shadow: 0 0 10px rgba(154,0,255,0.4);">CERO OSCURAS</div>
+                            <div class="fusion-desc">Dispara una onda de energía oscura devastadora que se ensancha y cubre gran parte del escenario a su paso.</div>
+                        </div>
+                        <div class="fusion-card">
+                            <div class="fusion-recipe">
+                                <span class="spell-tag">BRIMSTONE</span> + <span class="spell-tag">AMATERASU</span>
+                            </div>
+                            <div class="fusion-result" style="color: #ff003c; text-shadow: 0 0 10px rgba(255,0,60,0.4);">RAYO INFERNAL</div>
+                            <div class="fusion-desc">Rayo continuo de fuego negro que drena rápidamente la salud enemiga y deja llamas negras persistentes en el suelo.</div>
+                        </div>
+                        <div class="fusion-card">
+                            <div class="fusion-recipe">
+                                <span class="spell-tag">ZA WARUDO</span> + <span class="spell-tag">CHIDORI</span>
+                            </div>
+                            <div class="fusion-result" style="color: #00ffaa; text-shadow: 0 0 10px rgba(0,255,170,0.4);">TIME SKIP</div>
+                            <div class="fusion-desc">Detiene temporalmente el tiempo e inflige daño eléctrico instantáneo y crítico a todos los enemigos activos en la arena.</div>
+                        </div>
+                        <div class="fusion-card">
+                            <div class="fusion-recipe">
+                                <span class="spell-tag">PRISM</span> + <span class="spell-tag">KAMEHA</span>
+                            </div>
+                            <div class="fusion-result" style="color: #ffff00; text-shadow: 0 0 10px rgba(255,255,0,0.4);">MASTER SPARK</div>
+                            <div class="fusion-desc">Haz de luz gigantesco de escala colosal que pinta una gran cantidad de plataformas e inflige daño persistente letal.</div>
+                        </div>
+                        <div class="fusion-card">
+                            <div class="fusion-recipe">
+                                <span class="spell-tag">CHAIN LIGHTNING</span> + <span class="spell-tag">KAMEHA</span>
+                            </div>
+                            <div class="fusion-result" style="color: #00f3ff; text-shadow: 0 0 10px rgba(0,243,255,0.4);">RAILGUN (CAÑÓN DE RIEL)</div>
+                            <div class="fusion-desc">Proyectil electromagnético instantáneo que atraviesa enemigos y muros a velocidad sónica infligiendo daño masivo.</div>
+                        </div>
+                        <div class="fusion-card">
+                            <div class="fusion-recipe">
+                                <span class="spell-tag">BATS</span> + <span class="spell-tag">AMATERASU</span>
+                            </div>
+                            <div class="fusion-result" style="color: #ff3c00; text-shadow: 0 0 10px rgba(255,60,0,0.4);">INFERNAL BATS</div>
+                            <div class="fusion-desc">Invoca una horda de murciélagos llameantes de Amaterasu que persiguen a los enemigos y te curan con el daño causado.</div>
+                        </div>
+                        <div class="fusion-card">
+                            <div class="fusion-recipe">
+                                <span class="spell-tag">GLACIER</span> + <span class="spell-tag">METEOR</span>
+                            </div>
+                            <div class="fusion-result" style="color: #aaddff; text-shadow: 0 0 10px rgba(170,221,255,0.4);">HAILSTORM (GRANIZO)</div>
+                            <div class="fusion-desc">Lluvia de cometas helados que caen sobre la arena congelando y ralentizando a cualquier enemigo golpeado.</div>
+                        </div>
+                        <div class="fusion-card">
+                            <div class="fusion-recipe">
+                                <span class="spell-tag">BLACK HOLE</span> + <span class="spell-tag">KAMEHA</span>
+                            </div>
+                            <div class="fusion-result" style="color: #6a0dad; text-shadow: 0 0 10px rgba(106,13,173,0.4);">VOID BEAM (HAZ DE VACÍO)</div>
+                            <div class="fusion-desc">Haz de energía gravitatoria que succiona hacia su centro a los enemigos que se encuentren en su trayectoria de vuelo.</div>
+                        </div>
+                        <div class="fusion-card">
+                            <div class="fusion-recipe">
+                                <span class="spell-tag">FULL COUNTER</span> + <span class="spell-tag">PRISM</span>
+                            </div>
+                            <div class="fusion-result" style="color: #36ff9a; text-shadow: 0 0 10px rgba(54,255,154,0.4);">MIRROR DOME</div>
+                            <div class="fusion-desc">Crea un domo protector de espejos alrededor del jugador que repele e invierte la dirección de cualquier proyectil enemigo.</div>
+                        </div>
+                        <div class="fusion-card">
+                            <div class="fusion-recipe">
+                                <span class="spell-tag">HEALING FIELD</span> + <span class="spell-tag">STAR</span>
+                            </div>
+                            <div class="fusion-result" style="color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.4);">SANCTUARY</div>
+                            <div class="fusion-desc">Establece un oasis de curación que sana progresivamente y otorga invulnerabilidad breve a los aliados en su interior.</div>
+                        </div>
+                        <div class="fusion-card">
+                            <div class="fusion-recipe">
+                                <span class="spell-tag">DASH STRIKE</span> + <span class="spell-tag">CHIDORI</span>
+                            </div>
+                            <div class="fusion-result" style="color: #00aaff; text-shadow: 0 0 10px rgba(0,170,255,0.4);">LIGHTNING DASH</div>
+                            <div class="fusion-desc">Te deslizas hacia adelante imbuido en electricidad, atravesando enemigos a gran velocidad y electrocutándolos.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab content: Ragdoll & Physics -->
+                <div id="tab-ragdoll" class="tab-content-pane" style="display: none;">
+                    <h3 style="color: #ffff00; margin: 10px 0 5px; font-size: 1.1rem;">Físicas del Muñeco de Trapo (Ragdoll)</h3>
+                    <p style="margin: 5px 0;">Presiona el botón de **TRAPO** para desactivar tu postura y convertirte en una masa física rebotante.</p>
+                    <h4 style="color: #00f3ff; margin: 10px 0 5px; font-size: 1rem;">Mecánicas de Impacto y Patadas:</h4>
+                    <ul style="padding-left: 20px; line-height: 1.4; margin: 5px 0;">
+                        <li><strong>Impacto a Alta Velocidad:</strong> Si sales disparado en modo trapo y chocas contra un enemigo a gran velocidad, le causarás daño físico masivo en proporción a tu velocidad.</li>
+                        <li><strong>Patadas de Aliados:</strong> Si estás en modo trapo en el suelo, cualquier jugador activo de tu equipo puede correr hacia ti para **patearte**, impulsándote por el aire.</li>
+                        <li><strong>Patadas de Enemigos:</strong> Si estás tirado cerca de los enemigos, estos te patearán causándote daño leve y arrojándote lejos. ¡Vuelve a levantarte rápido!</li>
+                    </ul>
+                </div>
+
+                <!-- Tab content: Roguelike Mode -->
+                <div id="tab-roguelike" class="tab-content-pane" style="display: none;">
+                    <h3 style="color: #ffaa00; margin: 10px 0 5px; font-size: 1.1rem;">Mutadores de Ronda Roguelike</h3>
+                    <p style="margin: 5px 0;">En cada ronda del modo Roguelike, se aplica un modificador aleatorio con mecánicas y efectos especiales:</p>
+                    <ul style="padding-left: 20px; line-height: 1.4; margin: 5px 0;">
+                        <li><strong>Gravedad Baja:</strong> Física lunar flotante y saltos más altos.</li>
+                        <li><strong>Lluvia de Fuego:</strong> Bolas de fuego hostiles caen constantemente.</li>
+                        <li><strong>Cámara Rápida:</strong> La velocidad total del juego aumenta a 1.3x.</li>
+                        <li><strong>Muerte Explosiva:</strong> Todos los enemigos estallan al ser eliminados.</li>
+                        <li><strong>Saltarines:</strong> Los jugadores rebotan automáticamente todo el tiempo.</li>
+                        <li><strong>Eclipse Solar:</strong> Oscuridad profunda en toda la arena; solo ves un haz de luz a tu alrededor.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer" style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; text-align: center;">
+                <button id="how-to-play-ok-btn" class="btn-secondary" style="margin: 0; padding: 10px 30px; font-size: 1.1rem; width: 100%;">¡Entendido!</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
